@@ -48,7 +48,7 @@ RUN ln -s /usr/local/bin/nats-server-config-reloader /nats-server-config-reloade
 
 FROM scratch
 
-COPY --from=rootfs /
+COPY --from=rootfs / /
 
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     GO_APP=nats-server-config-reloader
