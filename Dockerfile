@@ -8,6 +8,10 @@
 # upgraded from 1.3.2-r0 to 1.4-r0, then the filesystem is copied onto
 # scratch. Xray scans that copy, so the old zlib layer is not in the image.
 # The shell stays.
+#
+# The reloader stays root. nats-server writes /var/run/nats/nats.pid as root
+# with mode 0600, and the reloader has to open that file. uid 1000 gets
+# "permission denied", the sidecar exits, and the pod drops out of the Service.
 
 FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine3.24 AS build
 
@@ -39,10 +43,7 @@ RUN set -eux; \
     echo "${zlib_ver}" | grep -q '^zlib-1.4-r0 '; \
     echo "${zlib_ver}" | grep -q '1.3' && exit 1 || true; \
     rm -rf /var/cache/apk; \
-    mkdir -p /var/cache/apk /var/run/nats; \
-    addgroup -g 1000 nats; \
-    adduser -D -u 1000 -G nats nats; \
-    chown nats:nats /var/run/nats
+    mkdir -p /var/cache/apk /var/run/nats
 
 COPY --from=build /tmp/nats-server-config-reloader /usr/local/bin/nats-server-config-reloader
 
@@ -57,7 +58,6 @@ COPY --from=rootfs / /
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     GO_APP=nats-server-config-reloader
 
-USER nats
 ENTRYPOINT ["/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="nats-server-config-reloader" \
