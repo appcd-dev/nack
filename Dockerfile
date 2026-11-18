@@ -17,7 +17,8 @@ ARG TARGETARCH
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . .
+COPY cmd/nats-server-config-reloader/ cmd/nats-server-config-reloader/
+COPY pkg/natsreloader/ pkg/natsreloader/
 
 ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN go build -trimpath -buildvcs=false \
