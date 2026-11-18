@@ -4,14 +4,17 @@
 # This image is one scratch layer. The reloader command does not import
 # nats-server. The build fails if v2.15.1 still shows up in the binary.
 
-FROM golang:1.27.3-alpine3.24 AS build
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine3.24 AS build
+
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN go build -trimpath -buildvcs=false \
         -ldflags "-s -w -X main.Version=0.25.0" \
         -o /tmp/nats-server-config-reloader ./cmd/nats-server-config-reloader \
