@@ -38,7 +38,10 @@ RUN set -eux; \
     echo "${zlib_ver}" | grep -q '^zlib-1.4-r0 '; \
     echo "${zlib_ver}" | grep -q '1.3' && exit 1 || true; \
     rm -rf /var/cache/apk; \
-    mkdir -p /var/cache/apk
+    mkdir -p /var/cache/apk /var/run/nats; \
+    addgroup -g 1000 nats; \
+    adduser -D -u 1000 -G nats nats; \
+    chown nats:nats /var/run/nats
 
 COPY --from=build /tmp/nats-server-config-reloader /usr/local/bin/nats-server-config-reloader
 
@@ -53,6 +56,7 @@ COPY --from=rootfs / /
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     GO_APP=nats-server-config-reloader
 
+USER nats
 ENTRYPOINT ["/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="nats-server-config-reloader" \
